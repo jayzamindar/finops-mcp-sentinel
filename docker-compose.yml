@@ -1,0 +1,13 @@
+version: '3'
+services:
+  mcp-server:
+    build: ./src/mcp-server
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ui
+
+  ui:
+    build: ./src/ui
+    ports:
+      - "3000:3000"
