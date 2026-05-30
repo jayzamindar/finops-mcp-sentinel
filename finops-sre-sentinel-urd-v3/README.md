@@ -1,9 +1,10 @@
 # FinOps SRE Sentinel - User Requirements Document (URD)
 
 **Version:** 3.0  
-**Status:** Draft  
-**Target Infrastructure:** Local Docker Desktop + NVIDIA NIM Free Tier + Ollama  
-**Tech Stack:** Python (FastAPI) + React (TypeScript)  
+**Status:** ✅ Implemented — all 4 MCP tools, dashboard UI, test suite (36/36), Docker orchestration  
+**Target Infrastructure:** Local Docker Desktop (mock mode) → AWS (production path)  
+**Tech Stack:** Python (FastAPI) + React (JavaScript)  
+**Repository:** [github.com/jayzamindar/finops-mcp-sentinel](https://github.com/jayzamindar/finops-mcp-sentinel)  
 
 ## Document Structure
 

@@ -1,9 +1,6 @@
-class ToolRegistry:
-    def __init__(self):
-        self.tools = {}
-
-    def register_tool(self, tool_name, tool):
-        self.tools[tool_name] = tool
-
-    def get_tool(self, tool_name):
-        return self.tools.get(tool_name)
+# ============================================================
+# FinOps-SRE Sentinel — Tools Package
+# ============================================================
+# Generated based: [Arch_Section_03], [URD_Section_03]
+# Target Path: src/mcp-server/app/tools/__init__.py
+# ============================================================

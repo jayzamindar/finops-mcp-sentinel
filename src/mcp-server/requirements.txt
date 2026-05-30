@@ -1,0 +1,45 @@
+# ============================================================
+# FinOps-SRE Sentinel — MCP Server Dependencies
+# ============================================================
+# Generated based on: [URD_Section_04], [Arch_Section_02]
+# Target Path: src/mcp-server/requirements.txt
+# ============================================================
+
+# === Web Framework ===
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# === MCP Protocol ===
+mcp>=1.0.0
+
+# === Data Validation ===
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# === HTTP Client ===
+httpx>=0.25.0
+
+# === Database ===
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+
+# === Cache ===
+redis>=5.0.0
+
+# === Authentication ===
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# === Observability ===
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-exporter-otlp>=1.21.0
+
+# === Structured Logging ===
+structlog>=23.2.0
+
+# === Testing ===
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0

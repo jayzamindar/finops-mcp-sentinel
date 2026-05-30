@@ -1,10 +1,18 @@
 import os
 
 def create_project_structure():
+    project_name = "finops-sre-sentinel"
     root_dir = os.getcwd()
 
+    # Create project directory
+    project_dir = os.path.join(root_dir, project_name)
+    os.makedirs(project_dir, exist_ok=True)
+
     # Create subdirectories
-    src_dir = os.path.join(root_dir, "src")
+    urd_dir = os.path.join(project_dir, "finops-sre-sentinel-urd-v3")
+    architecture_dir = os.path.join(project_dir, "finops-sre-sentinel-architecture")
+    prompts_dir = os.path.join(project_dir, "finops-sre-sentinel-prompts")
+    src_dir = os.path.join(project_dir, "src")
     mcp_server_dir = os.path.join(src_dir, "mcp-server")
     app_dir = os.path.join(mcp_server_dir, "app")
     tools_dir = os.path.join(app_dir, "tools")
@@ -14,6 +22,10 @@ def create_project_structure():
     ui_src_dir = os.path.join(ui_dir, "src")
     components_dir = os.path.join(ui_src_dir, "components")
 
+    os.makedirs(urd_dir, exist_ok=True)
+    os.makedirs(architecture_dir, exist_ok=True)
+    os.makedirs(prompts_dir, exist_ok=True)
+    os.makedirs(src_dir, exist_ok=True)
     os.makedirs(mcp_server_dir, exist_ok=True)
     os.makedirs(app_dir, exist_ok=True)
     os.makedirs(tools_dir, exist_ok=True)
@@ -62,9 +74,8 @@ def create_project_structure():
         pass
     with open(os.path.join(ui_dir, "Dockerfile"), "w") as f:
         pass
-    with open(os.path.join(root_dir, "docker-compose.yml"), "w") as f:
+    with open(os.path.join(project_dir, "docker-compose.yml"), "w") as f:
         pass
 
 if __name__ == "__main__":
     create_project_structure()
-    print("Project structure created successfully.")

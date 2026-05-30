@@ -1,13 +1,47 @@
-version: '3'
-services:
-  mcp-server:
-    build: ./src/mcp-server
-    ports:
-      - "8000:8000"
-    depends_on:
-      - ui
+# ============================================================
+# FinOps-SRE Sentinel — Docker Compose (Full Stack)
+# ============================================================
+# One-command startup: docker compose up --build
+# Access: UI at http://localhost:3001, API at http://localhost:8080
+# ============================================================
 
-  ui:
-    build: ./src/ui
+services:
+  # --- MCP Server (FastAPI + Mock Data Engine) ---
+  mcp-server:
+    build:
+      context: ./src/mcp-server
+      dockerfile: Dockerfile
+    container_name: finops-mcp-server
     ports:
-      - "3000:3000"
+      - "8080:8080"
+    environment:
+      - MOCK_MODE=true
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - finops-net
+
+  # --- Dashboard UI (React + Nginx) ---
+  ui:
+    build:
+      context: ./src/ui
+      dockerfile: Dockerfile
+    container_name: finops-ui
+    ports:
+      - "3001:3001"
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - finops-net
+
+networks:
+  finops-net:
+    driver: bridge

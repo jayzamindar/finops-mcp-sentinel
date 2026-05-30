@@ -1,8 +1,3 @@
-import React from 'react';
-import { render } from 'react-dom';
-
-const App = () => {
-  // Render UI components
-};
-
-render(<App />, document.getElementById('root'));
+// This file was moved to src/ui/src/App.js
+// Kept as a re-export for backward compatibility
+export { default } from "../App";
