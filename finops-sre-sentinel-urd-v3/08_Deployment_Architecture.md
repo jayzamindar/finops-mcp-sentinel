@@ -13,7 +13,7 @@
 |-------|-----------|---------------------|-----------|
 | **Backend Server** | FastAPI | Flask, Django | FastAPI chosen for async capabilities and OpenAPI support |
 | **Frontend UI** | React | Angular, Vue.js | React chosen for component-based architecture and ecosystem |
-| **AI Model** | NVIDIA NIM API | Other cloud AI providers (e.g., AWS SageMaker) | NVIDIA NIM chosen for free tier and performance |
+| **MCP Protocol** | FastAPI (JSON-RPC 2.0) | gRPC, GraphQL | FastAPI chosen for async capabilities, OpenAPI, and SSE support |
 
 
 The project uses **Docker Compose** for local development. This setup includes:
@@ -36,8 +36,8 @@ services:
       - prometheus
       - grafana
     environment:
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
-      - OLLAMA_ENDPOINT=http://ollama:11434
+      - MCP_API_KEY=${MCP_API_KEY}
+      - MCP_ENV=development
 
   prometheus:
     image: prometheus/prometheus:v2.45.0
@@ -104,10 +104,10 @@ spec:
         ports:
         - containerPort: 8000
         env:
-        - name: NVIDIA_API_KEY
+        - name: MCP_API_KEY
           valueFrom:
             secretKeyRef:
-              name: nvidia-api-key
+              name: mcp-api-key
               key: api_key
 ```
 
@@ -136,7 +136,7 @@ services:
 
 Before deploying:
 
-- [ ] Ensure NVIDIA API key is stored securely in `.env`
+- [ ] Ensure MCP API key is stored securely in `.env`
 - [ ] Configure `config.yaml` for desired service types (mock/real)
 - [ ] Verify Docker images are built and pushed to registry
 - [ ] Kubernetes cluster is accessible and configured

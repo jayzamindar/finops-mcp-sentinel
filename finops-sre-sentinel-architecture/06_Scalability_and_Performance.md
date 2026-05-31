@@ -11,18 +11,45 @@ The system is designed to scale horizontally to support increasing loads.
 
 ### 6.1.1 Containerization
 
-The system uses **Docker** for containerization.
+The system uses **Docker** for containerization with a multi-container Docker Compose setup.
 
 ```dockerfile
-# Dockerfile
+# Dockerfile (mcp-server)
 FROM python:3.11-slim
 
-# ... other instructions ...
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app/ ./app/
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-### 6.1.2 Orchestration
+### 6.1.2 Docker Compose Orchestration
 
-The system uses **Kubernetes** for orchestration.
+The system uses **Docker Compose** for local development and deployment:
+
+```yaml
+# docker-compose.yml
+services:
+  mcp-server:
+    build: ./src/mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEYS=${API_KEYS}
+  
+  ui:
+    build: ./src/ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mcp-server
+```
+
+### 6.1.3 Kubernetes Support
+
+For production, the system can be deployed to **Kubernetes**:
 
 ```yaml
 # Deployment YAML
@@ -32,45 +59,92 @@ metadata:
   name: mcp-server
 spec:
   replicas: 3
-  # ... other specifications ...
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    spec:
+      containers:
+        - name: mcp-server
+          image: finops-sre-sentinel/mcp-server:latest
+          ports:
+            - containerPort: 8000
 ```
 
 ## 6.2 Performance Optimization
 
 The system is optimized for performance using various techniques.
 
-### 6.2.1 Caching
+### 6.2.1 In-Memory Tool Registry
 
-The system uses **Redis** for caching frequently accessed data.
+The **ToolRegistry** loads all tools at startup for fast execution:
 
 ```python
-import redis
+from app.tool_registry import ToolRegistry
 
-redis_client = redis.Redis(host='localhost', port=6379)
-
-def get_cached_data(key: str) -> str:
-    # Retrieve cached data
-    pass
+registry = ToolRegistry()
+registry.discover_tools("app/tools")
+# Tools are loaded once at startup, no per-request discovery overhead
 ```
 
-### 6.2.2 Query Optimization
+### 6.2.2 SSE Streaming
 
-The system optimizes queries using **database indexing** and **query optimization techniques**.
+Real-time insights are streamed via **SSE (Server-Sent Events)** which uses HTTP keep-alive connections for efficient push updates:
 
-```sql
--- Example query optimization
-CREATE INDEX idx_service_name ON logs(service_name);
+```python
+from fastapi.responses import StreamingResponse
+
+@app.get("/api/v1/stream/insights")
+async def stream_insights():
+    async def event_generator():
+        while True:
+            insight = await generate_insight()
+            yield f"data: {json.dumps(insight)}\n\n"
+            await asyncio.sleep(interval)
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+```
+
+### 6.2.3 Async FastAPI Endpoints
+
+All endpoints use **async/await** for non-blocking I/O:
+
+```python
+@app.post("/api/v1/tools/{tool_name}/invoke")
+async def invoke_tool(tool_name: str, request: ToolInvokeRequest):
+    # Non-blocking tool execution
+    result = await tool.execute(request.input_data)
+    return result
 ```
 
 ## 6.3 Monitoring and Alerting
 
-The system is monitored using **Prometheus** and **Grafana**.
+The system provides built-in monitoring endpoints:
+
+### 6.3.1 Health Check
+
+```python
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "tools_loaded": registry.tool_count(),
+        "version": "1.0.0"
+    }
+```
+
+### 6.3.2 Prometheus Integration
+
+For production monitoring, the system can expose metrics for **Prometheus**:
 
 ```yaml
 # Prometheus configuration
 prometheus:
   scrape_interval: 15s
   evaluation_interval: 15s
+  scrape_configs:
+    - job_name: 'mcp-server'
+      static_configs:
+        - targets: ['mcp-server:8000']
 ```
 
 *This section defines the scalability and performance considerations of the system. For testing and validation details, proceed to Section 07.*

@@ -45,7 +45,7 @@ data: {"approval_id": "apr_x1y2z3", "risk_score": 7, "action": "restart_pod", "r
 ```
 POST /api/v1/tools/{tool_name}/execute
 Content-Type: application/json
-Authorization: Bearer {jwt_token}
+X-API-Key: {api_key}
 ```
 
 **Request Body:** Tool-specific input schema (see Section 03 - Functional Requirements)
@@ -55,7 +55,7 @@ Authorization: Bearer {jwt_token}
 |------|-------------|
 | **202 Accepted** | Tool execution started (async via SSE) |
 | **400 Bad Request** | Invalid input parameters |
-| **401 Unauthorized** | Missing or invalid JWT token |
+| **401 Unauthorized** | Missing or invalid API key |
 | **403 Forbidden** | Insufficient RBAC permissions |
 | **429 Too Many Requests** | Rate limit exceeded |
 | **503 Service Unavailable** | Kill switch active or system in safe mode |
@@ -63,12 +63,12 @@ Authorization: Bearer {jwt_token}
 ### 7.1.3 Approval Management
 
 ```
-GET /api/v1/approvals?status={pending|approved|rejected}&limit={n}
-Authorization: Bearer {jwt_token}
+GET /api/v1/approvals/pending
+X-API-Key: {api_key}
 
-POST /api/v1/approvals/{approval_id}/respond
+POST /api/v1/approvals/{approval_id}
 Content-Type: application/json
-Authorization: Bearer {jwt_token}
+X-API-Key: {api_key}
 ```
 
 **POST Request Body:**
@@ -105,11 +105,13 @@ GET /health
   "uptime_seconds": 86400,
   "active_connections": 5,
   "pending_approvals": 2,
-  "models_available": {
-    "ollama": true,
-    "nvidia_nim": true,
-    "active_model": "deepseek-v4-flash"
-  },
+  "tools_registered": 4,
+  "registered_tools": [
+    "diagnose_transaction_latency",
+    "analyze_cloud_spend_anomaly",
+    "remediate_unhealthy_pod",
+    "verify_compliance_drift"
+  ],
   "last_kill_switch": null,
   "audit_log_integrity": "verified",
   "timestamp": "2026-04-27T10:00:00Z"
@@ -120,7 +122,7 @@ GET /health
 
 ```
 POST /api/v1/kill-switch/activate
-Authorization: Bearer {jwt_token}
+X-API-Key: {api_key}
 Content-Type: application/json
 ```
 
@@ -146,7 +148,7 @@ Content-Type: application/json
 
 ```
 GET /api/v1/tokens/usage?timeframe={today|week|month}&granularity={per_tool|per_session|per_user}
-Authorization: Bearer {jwt_token}
+X-API-Key: {api_key}
 ```
 
 **Response:**
@@ -195,7 +197,7 @@ Authorization: Bearer {jwt_token}
 | `TOOL_001` | Tool Not Found | 404 | Requested tool does not exist in registry |
 | `TOOL_002` | Execution Timeout | 408 | Tool exceeded maximum execution time (30s) |
 | `TOOL_003` | Invalid Parameters | 400 | Input failed JSON Schema validation |
-| `AUTH_001` | Invalid Token | 401 | JWT token is malformed, expired, or revoked |
+| `AUTH_001` | Invalid API Key | 401 | API key is missing, malformed, or not recognized |
 | `AUTH_002` | Insufficient Role | 403 | User role cannot execute this tool |
 | `RBAC_001` | Permission Denied | 403 | User lacks required permission for action |
 | `PII_001` | Redaction Failure | 500 | PII redaction engine encountered an error |

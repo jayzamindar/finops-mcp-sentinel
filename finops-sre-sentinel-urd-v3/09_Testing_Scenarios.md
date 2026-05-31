@@ -15,7 +15,7 @@ Unit tests verify individual components of the MCP server.
 
 | Test ID | Description | Expected Result |
 |---------|-------------|------------------|
-| `UT-001` | Authentication middleware validates JWT token | Valid token accepted, invalid rejected |
+| `UT-001` | Authentication middleware validates API key | Valid key accepted, invalid rejected |
 | `UT-002` | RBAC middleware enforces role-based permissions | Correct access based on role |
 | `UT-003` | PII redaction masks sensitive data correctly | All sensitive data redacted |
 | `UT-004` | Audit log entry creation | Log entry contains all required fields |
@@ -31,24 +31,24 @@ from mcp_server.main import app
 client = TestClient(app)
 
 def test_auth_middleware():
-    # Test valid JWT token
-    token = generate_valid_jwt()
-    response = client.get("/api/v1/stream", headers={"Authorization": f"Bearer {token}"})
+    # Test valid API key
+    api_key = generate_valid_api_key()
+    response = client.get("/api/v1/stream", headers={"X-API-Key": api_key})
     assert response.status_code == 200
     
-    # Test invalid JWT token
-    invalid_token = "invalid_token"
-    response = client.get("/api/v1/stream", headers={"Authorization": f"Bearer {invalid_token}"})
+    # Test invalid API key
+    invalid_key = "invalid_key"
+    response = client.get("/api/v1/stream", headers={"X-API-Key": invalid_key})
     assert response.status_code == 401
 
 def test_rbac_middleware():
     # Test role-based access control
-    token = generate_jwt_for_role("sre")
-    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 202  # Accepted
+    api_key = generate_api_key_for_role("sre")
+    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"X-API-Key": api_key})
+    assert response.status_code == 200
     
-    token = generate_jwt_for_role("viewer")
-    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"Authorization": f"Bearer {token}"})
+    api_key = generate_api_key_for_role("viewer")
+    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"X-API-Key": api_key})
     assert response.status_code == 403  # Forbidden
 
 def test_pii_redaction():
@@ -90,9 +90,9 @@ Integration tests verify the interaction between different components.
 ```python
 def test_tool_execution_sse():
     # Test end-to-end tool execution
-    token = generate_valid_jwt()
-    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"Authorization": f"Bearer {token}"}, json={"service_name": "payment-gateway"})
-    assert response.status_code == 202  # Accepted
+    api_key = generate_valid_api_key()
+    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"X-API-Key": api_key}, json={"service_name": "payment-gateway"})
+    assert response.status_code == 200
     
     # Check SSE stream for results
     sse_response = client.get("/api/v1/stream?client_id=test_client&events=tool,approval,audit")
@@ -104,16 +104,16 @@ def test_tool_execution_sse():
 
 def test_approval_workflow():
     # Test approval workflow
-    token = generate_jwt_for_role("senior_sre")
-    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"Authorization": f"Bearer {token}"}, json={"pod_name": "test-pod", "reason": "test"})
-    assert response.status_code == 202  # Accepted
+    api_key = generate_api_key_for_role("admin")
+    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"X-API-Key": api_key}, json={"pod_name": "test-pod", "reason": "test"})
+    assert response.status_code == 200
     
     approval_id = response.json()["approval_id"]
-    response = client.post(f"/api/v1/approvals/{approval_id}/respond", headers={"Authorization": f"Bearer {token}"}, json={"decision": "approve"})
+    response = client.post(f"/api/v1/approvals/{approval_id}", headers={"X-API-Key": api_key}, json={"decision": "approve"})
     assert response.status_code == 200
     
     # Verify approval status updated
-    response = client.get(f"/api/v1/approvals/{approval_id}", headers={"Authorization": f"Bearer {token}"})
+    response = client.get(f"/api/v1/approvals/pending", headers={"X-API-Key": api_key})
     assert response.json()["status"] == "approved"
 
 def test_audit_log_immutability():
@@ -129,8 +129,8 @@ def test_audit_log_immutability():
 
 def test_prometheus_mock_query():
     # Test Prometheus mock query
-    response = client.get("/api/v1/tools/diagnose_transaction_latency/execute", headers={"Authorization": f"Bearer {generate_valid_jwt()}"}, json={"service_name": "test-service"})
-    assert response.status_code == 202  # Accepted
+    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"X-API-Key": generate_valid_api_key()}, json={"service_name": "test-service"})
+    assert response.status_code == 200
     
     # Verify results contain expected data
     sse_response = client.get("/api/v1/stream?client_id=test_client&events=tool:result")
@@ -158,14 +158,14 @@ Security tests verify the security features of the system.
 ```python
 def test_unauthorized_tool_execution():
     # Test unauthorized tool execution
-    token = generate_jwt_for_role("viewer")
-    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"Authorization": f"Bearer {token}"}, json={"pod_name": "test-pod"})
+    api_key = generate_api_key_for_role("viewer")
+    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"X-API-Key": api_key}, json={"pod_name": "test-pod"})
     assert response.status_code == 403  # Forbidden
 
 def test_pii_in_tool_output():
     # Test PII in tool output
     input_data = {"service_name": "payment-gateway", "time_range": {"start": "2025-01-01T00:00:00Z", "end": "2025-01-01T01:00:00Z"}}
-    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"Authorization": f"Bearer {generate_valid_jwt()}"}, json=input_data)
+    response = client.post("/api/v1/tools/diagnose_transaction_latency/execute", headers={"X-API-Key": generate_valid_api_key()}, json=input_data)
     result = response.json()
     
     # Verify PII redaction
@@ -174,12 +174,12 @@ def test_pii_in_tool_output():
 
 def test_high_risk_action_without_approval():
     # Test high-risk action without approval
-    token = generate_jwt_for_role("sre")
-    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"Authorization": f"Bearer {token}"}, json={"pod_name": "critical-pod", "reason": "test", "risk_score": 10})
-    assert response.status_code == 202  # Accepted but requires approval
+    api_key = generate_api_key_for_role("sre")
+    response = client.post("/api/v1/tools/remediate_unhealthy_pod/execute", headers={"X-API-Key": api_key}, json={"pod_name": "critical-pod", "reason": "test", "risk_score": 10})
+    assert response.status_code == 200
     
     approval_id = response.json()["approval_id"]
-    response = client.get(f"/api/v1/approvals/{approval_id}", headers={"Authorization": f"Bearer {token}"})
+    response = client.get(f"/api/v1/approvals/pending", headers={"X-API-Key": api_key})
     assert response.json()["status"] == "pending"
 
 def test_audit_log_tampering():

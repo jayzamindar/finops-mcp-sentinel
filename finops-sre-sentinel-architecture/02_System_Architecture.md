@@ -22,11 +22,10 @@ The system consists of several key components that interact with each other to p
 │  │  Server    │  │   Layer      │  │              │  │            │  │
 │  └─────┬──────┘  └─────┬────────┘  └──────┬───────┘  └─────┬──────┘  │
 │        │               │                  │               │         │
-│        │               │                  │               │         │
 │        ▼               ▼                  ▼               ▼         │
 │  ┌────────────┐  ┌────────────┐  ┌──────────────┐  ┌────────────┐  │
-│  │  NVIDIA    │  │  Ollama     │  │  React UI    │  │  Tool      │  │
-│  │  NIM API   │  │  Local Models│  │              │  │  Registry  │  │
+│  │  FastAPI   │  │  API Key   │  │  React 18    │  │  Tool      │  │
+│  │  + uvicorn │  │  + SHA-256 │  │  JavaScript  │  │  Registry  │  │
 │  └────────────┘  └────────────┘  └──────────────┘  └────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -35,10 +34,10 @@ The system consists of several key components that interact with each other to p
 
 | Component | Responsibility |
 |-----------|----------------|
-| **MCP Server** | Handles MCP protocol requests, executes tools |
-| **Security Layer** | Provides authentication, authorization, PII redaction |
-| **UI Layer** | Presents real-time insights, manages approvals |
-| **Tools** | Performs specific SRE tasks (e.g., diagnose, analyze, remediate) |
+| **MCP Server** | Handles MCP JSON-RPC 2.0 requests, REST API, SSE streaming |
+| **Security Layer** | API Key authentication (SHA-256), RBAC, PII redaction |
+| **UI Layer** | React 18 dashboard with real-time insights, tool runner, approvals |
+| **Tools** | 4 algorithmic tools: anomaly detection, latency diagnosis, pod remediation, compliance audit |
 
 ## 2.2 Technical Implementation
 
@@ -47,14 +46,16 @@ The system is built using a combination of technologies to ensure scalability, s
 ### 2.2.1 Backend Technology Stack
 
 - **Python 3.11+**: For the MCP server and tool execution
-- **FastAPI**: For building the REST API
+- **FastAPI + uvicorn**: For building the REST API and SSE streaming endpoints
 - **uv**: For package management
+- **ToolRegistry**: Dynamic tool discovery via `tool_registry.py`
 
 ### 2.2.2 Frontend Technology Stack
 
-- **React**: For building the UI components
-- **TypeScript**: For type safety and maintainability
+- **React 18 (JavaScript)**: For building the UI components (NOT TypeScript)
+- **createRoot API**: Modern React 18 rendering
 - **Material-UI**: For consistent design
+- **Fetch API**: For REST calls and SSE connections
 
 ## 2.3 Data Flow
 
@@ -64,15 +65,16 @@ The system processes data from various sources, including logs, metrics, and clo
 
 | Data Source | Description |
 |-------------|-------------|
-| **Logs** | Collected from various services and applications |
-| **Metrics** | Collected from Prometheus and other monitoring tools |
-| **Cloud Cost Data** | Collected from cloud providers (e.g., AWS, Azure) |
+| **Metrics** | Collected from Prometheus (latency, pod health, resource usage) |
+| **Cloud Cost Data** | Collected from cloud provider APIs (spend, billing) |
+| **Compliance Data** | Collected from cloud provider compliance APIs |
 
 ### 2.3.2 Data Processing
 
-The system processes data using various tools and techniques, including:
-- **Log analysis**: Using ELK Stack or similar tools
-- **Metric analysis**: Using Prometheus and other monitoring tools
-- **Cloud cost analysis**: Using cloud provider APIs and FinOps tools
+The system processes data using algorithmic tools:
+- **Spend anomaly detection**: Z-score statistical analysis on daily cost data
+- **Latency diagnosis**: P50/P90/P95/P99 percentile classification
+- **Pod remediation**: Health status checks with safe restart and rollback
+- **Compliance auditing**: Rule-based checks against compliance frameworks
 
 *This section defines the high-level architecture of the system. For component design details, proceed to Section 03.*

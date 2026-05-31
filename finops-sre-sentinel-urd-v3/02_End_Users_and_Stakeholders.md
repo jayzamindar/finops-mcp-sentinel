@@ -147,10 +147,10 @@ New User
 1. Runs setup.ps1 (one-click install)
     │
     ▼
-2. Opens browser to http://localhost:3000 (UI)
+2. Opens browser to http://localhost:3001 (UI)
     │
     ▼
-3. Authenticates via JWT/OAuth
+3. Authenticates via API Key (X-API-Key header)
     │
     ▼
 4. Sees role-based dashboard

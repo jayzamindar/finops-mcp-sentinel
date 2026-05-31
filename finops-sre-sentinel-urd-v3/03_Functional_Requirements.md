@@ -192,7 +192,7 @@ The MCP server integrates with multiple data sources to provide comprehensive in
 │                      MCP GATEWAY LAYER                              │
 │   ┌─────────────────────────────────────────────────────────────┐   │
 │   │  Security Gateway (PII Redaction + RBAC + Auth)              │   │
-│   │  ├── JWT Token Validation                                     │   │
+│   │  ├── API Key Validation (X-API-Key header, SHA-256)           │   │
 │   │  ├── Role-Based Access Control (RBAC)                         │   │
 │   │  ├── PII Redaction Engine (account IDs, card numbers)         │   │
 │   │  └── Rate Limiting                                            │   │

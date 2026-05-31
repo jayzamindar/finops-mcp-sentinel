@@ -59,13 +59,6 @@ The MCP server manages several core entities that represent tool executions, app
   },
   "metadata": {
     "execution_time_ms": 1234,
-    "tokens_used": {
-      "input": 2450,
-      "output": 890,
-      "total": 3340
-    },
-    "model_used": "deepseek-v4-flash",
-    "model_source": "nvidia_nim",
     "cached": false,
     "retry_count": 0
   },
@@ -166,7 +159,7 @@ The MCP server manages several core entities that represent tool executions, app
   },
   "security": {
     "threat_detected": false,
-    "prompt_injection_suspected": false,
+    "input_sanitized": true,
     "pii_redacted": true
   },
   "timestamp": "2026-04-27T10:05:00.123Z",
@@ -197,7 +190,7 @@ The MCP server manages several core entities that represent tool executions, app
     },
     {
       "timestamp": "2026-04-27T10:02:00Z",
-      "event": "AI agent dispatched for investigation"
+      "event": "MCP tool dispatched for investigation"
     },
     {
       "timestamp": "2026-04-27T10:05:00Z",

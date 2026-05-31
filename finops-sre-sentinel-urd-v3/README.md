@@ -84,7 +84,7 @@ Feed the AI these sections per component:
 - **Testing Suite**: `09`
 
 ### AI Context Limit Safety
-Each section is **under 3,000 tokens**. You can feed any section to any model (including NVIDIA free models) without hitting context limits.
+Each section is **under 3,000 tokens**. You can feed any section to any LLM without hitting context limits.
 
 ---
 

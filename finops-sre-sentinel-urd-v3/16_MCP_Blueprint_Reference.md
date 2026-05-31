@@ -11,10 +11,10 @@
 
 The MCP blueprint serves as a **reusable template** for future MCP projects. It provides a structured framework for defining:
 
-1. **MCP Architecture**: Core components and their interactions
-2. **Tool Definitions**: Standardized tool schemas and execution logic
-3. **Security Guardrails**: Role-based access control and data protection
-4. **Token Governance**: Cost tracking and optimization strategies
+1. **MCP Architecture**: Core components and their interactions (FastAPI + JSON-RPC 2.0)
+2. **Tool Definitions**: Standardized tool schemas and execution logic (plain Python modules with auto-discovery)
+3. **Security Guardrails**: Role-based access control and data protection (API Key + SHA-256)
+4. **Resource Governance**: Execution budgets and operational efficiency tracking
 
 ## 16.2 Using the MCP Blueprint
 
@@ -23,23 +23,9 @@ To use this blueprint for a new MCP project:
 1. **Review the template**: Understand the core components and their interactions
 2. **Customize the tool definitions**: Define new tools or modify existing ones based on project requirements
 3. **Configure security guardrails**: Set up role-based access control and data protection
-4. **Implement token governance**: Track and optimize token usage
+4. **Implement resource governance**: Track execution budgets and rate limits
 
-### Unified SOC Operations Wireframe
-
-1. **Global Health Dashboard**
-	* MTTR Trend Chart
-	* Alert Volume Gauge
-	* Compliance Scorecard
-2. **Active Incidents Grid**
-	* Incident Severity Filter (High/Medium/Low)
-	* Incident Timeline View
-	* Quick Actions (e.g., approve/reject remediation)
-3. **Drill-Down Views**
-	* Entity Timelines (User, Host, IP)
-	* Cross-resource queries (e.g., KQL)
-
-### Fill-in-the-Gaps Template
+## 16.3 Fill-in-the-Gaps Template
 
 ```markdown
 # MCP Project Template
@@ -49,49 +35,72 @@ To use this blueprint for a new MCP project:
 - **Project Purpose**: [Insert project purpose]
 
 ## MCP Architecture
-- **Transport Layer**: [STDIO/SSE/REST]
-- **Tool Registry**: [List tools and their purposes]
-- **Security Layer**: [Describe security measures]
+- **Transport Layer**: FastAPI (REST + SSE + MCP JSON-RPC 2.0)
+- **Tool Registry**: ToolRegistry with auto-discovery from tools/ directory
+- **Security Layer**: API Key auth (X-API-Key header), RBAC, PII Redaction
 
 ## Tool Definitions
-- **Tool 1**: [Describe tool 1 and its schema]
-- **Tool 2**: [Describe tool 2 and its schema]
+- **Tool 1**: [module_name] - [description], input schema: {...}, output schema: {...}
+- **Tool 2**: [module_name] - [description], input schema: {...}, output schema: {...}
 
 ## Security Guardrails
-- **RBAC**: [Describe role-based access control]
-- **Data Protection**: [Describe data protection measures]
+- **Authentication**: API Key with SHA-256 hashing
+- **RBAC**: Role enums (admin, sre, viewer) with permission matrix
+- **Data Protection**: PII Redactor class for sensitive data masking
 
-## Token Governance
-- **Cost Tracking**: [Describe cost tracking strategy]
+## Resource Governance
+- **Execution Budgets**: Per-tool hourly/daily limits
+- **Rate Limiting**: Per-user and per-tool request throttling
+- **Cost Tracking**: Zero external API cost (all algorithmic tools)
+```
 
-### 16.2.1 Fill-in-the-Gaps Template
+## 16.4 Architecture Patterns
 
-The blueprint includes a fill-in-the-gaps template for defining new MCP projects.
+### 16.4.1 Tool Registration Pattern
 
-```markdown
-# MCP Project Template
+```python
+# Each tool is a plain Python module in app/tools/
+# ToolRegistry auto-discovers and registers them
+class ToolRegistry:
+    def register(self, tool_name: str, tool_module):
+        """Register a tool by name and module reference."""
+        self._tools[tool_name] = {
+            "name": tool_name,
+            "description": tool_module.description,
+            "input_schema": tool_module.input_schema,
+            "execute": tool_module.execute
+        }
+```
 
-## Project Overview
-- **Project Name**: [Insert project name]
-- **Project Purpose**: [Insert project purpose]
+### 16.4.2 Security Pattern
 
-## MCP Architecture
-- **Transport Layer**: [STDIO/SSE/REST]
-- **Tool Registry**: [List tools and their purposes]
-- **Security Layer**: [Describe security measures]
+```python
+# API Key authentication with SHA-256 hashing
+def verify_api_key(api_key: str) -> Optional[dict]:
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    return VALID_KEYS.get(key_hash)
 
-## Tool Definitions
-- **Tool 1**: [Describe tool 1 and its schema]
-- **Tool 2**: [Describe tool 2 and its schema]
+# RBAC permission check
+def check_permission(role: str, tool_name: str) -> bool:
+    return PERMISSION_MATRIX.get(role, {}).get(tool_name, False)
+```
 
-## Security Guardrails
-- **RBAC**: [Describe role-based access control]
-- **Data Protection**: [Describe data protection measures]
+### 16.4.3 SSE Streaming Pattern
 
-## Token Governance
-- **Cost Tracking**: [Describe cost tracking strategy and audit log verification
-- **PII Redaction Engine**: Regex-based masking of PAN, SSN, email, phone
-- **Data Encryption**: Environment variables and secrets stored securely
+```python
+# Server-Sent Events for real-time insights
+@app.get("/api/v1/stream/insights")
+async def stream_insights(request: Request):
+    async def event_generator():
+        while True:
+            data = await get_next_event()
+            yield f"data: {json.dumps(data)}\n\n"
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+```
+
+## 16.5 PII Redaction Engine
+
+Regex-based masking of PAN, SSN, email, phone using the `Redactor` class from `app/security/__init__.py`.
 
 ### 16.5.1 Redaction Rules
 
@@ -151,6 +160,6 @@ Sanitized Output (no PII)
 |----------|--------------|--------------|-----------|
 | **PCI-DSS** | Encryption, Access Control, Audit Trails | Automated tool + manual | Quarterly |
 | **SOC 2** | Security, Availability, Confidentiality | Audit log export + review | Annual |
-| **GDPR** | Data privacy, Right to explanation | PII redaction + XAI | Continuous |
+| **GDPR** | Data privacy, Right to explanation | PII redaction + audit trail | Continuous |
 
 *This section provides a reusable MCP blueprint. For the appendix, proceed to Section 17.*

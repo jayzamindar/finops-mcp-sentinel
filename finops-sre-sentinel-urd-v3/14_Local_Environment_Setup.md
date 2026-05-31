@@ -16,7 +16,6 @@ Before setting up the project locally, ensure you have the following installed:
 3. **Node.js 18+**: For the React UI
 4. **uv**: Python package manager
 5. **VS Code**: Recommended IDE with Continue.dev plugin
-6. **Ollama**: For local AI model inference
 
 ## 14.2 One-Click Setup Script
 
@@ -52,17 +51,17 @@ If the one-click script fails or you prefer manual setup:
 1. **Install Docker Desktop** and enable Kubernetes
 2. **Install Python 3.11+** and `uv`
 3. **Run `uv sync`** to install Python dependencies
-4. **Configure `.env`** file with NVIDIA API key
+4. **Configure `.env`** file with MCP API key (copy `.env.example`)
 5. **Start Docker containers** using `docker-compose up`
 
 ## 14.4 Verifying the Setup
 
 After setup, verify:
 
-1. MCP server is running on `http://localhost:8000`
-2. React UI is accessible at `http://localhost:3000`
+1. MCP server is running on `http://localhost:8000` (verify via `GET /health`)
+2. React UI is accessible at `http://localhost:3001`
 3. Prometheus and Grafana are running
-4. Ollama is configured correctly
+4. All 4 tools registered: `GET /api/v1/tools` returns tool list
 
 ## 14.5 Troubleshooting
 

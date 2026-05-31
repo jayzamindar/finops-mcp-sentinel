@@ -13,8 +13,8 @@ The security architecture is designed to protect sensitive data and ensure compl
 
 ### 5.1.1 Authentication
 
-* **JWT Tokens**: Used for authentication with RS256 signing
-* **OAuth2/OIDC**: Integration with cloud providers for secure authentication
+* **API Key Authentication**: X-API-Key header validated with SHA-256 hashing
+* **Role-Based API Keys**: Each API key is bound to a specific user role (admin, sre, viewer)
 
 ### 5.1.2 Authorization
 
@@ -75,7 +75,8 @@ Kill Switch Activated
 |------|---------------------------|
 | **diagnose_transaction_latency** | JSON Schema validation for input parameters |
 | **analyze_cloud_spend_anomaly** | Input sanitization for cloud provider credentials |
-| **remediate_unhealthy_pod** | Validation of pod name and namespace |
+| **remediate_unhealthy_pod** | Validation of pod name, namespace, and risk score |
+| **verify_compliance_drift** | Validation of compliance standard and scope parameters |
 
 ## 5.5 Error Handling
 

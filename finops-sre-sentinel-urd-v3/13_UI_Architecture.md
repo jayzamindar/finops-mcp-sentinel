@@ -11,19 +11,12 @@
 
 The UI serves as the primary interface for users to interact with the MCP server. It must provide:
 
-1. **Real-time insights** into system health and incidents
-2. **Human-in-the-loop (HITL) approvals** for critical actions
-3. **Token burn tracking** for cost governance
+1. **Real-time insights** into system health and tool execution results
+2. **Human-in-the-loop (HITL) approvals** for critical actions (e.g., pod restarts)
+3. **Resource usage tracking** for operational governance
 4. **Compliance monitoring** with drill-down capabilities
 
 ## 13.2 Technical Architecture
-
-The UI serves as the primary interface for users to interact with the MCP server. It must provide:
-
-1. **Real-time insights** into system health and incidents
-2. **Human-in-the-loop (HITL) approvals** for critical actions
-3. **Token burn tracking** for cost governance
-4. **Compliance monitoring** with drill-down capabilities
 
 ### Unified SOC Operations Wireframe
 
@@ -38,53 +31,6 @@ The UI serves as the primary interface for users to interact with the MCP server
 3. **Drill-Down Views**
 	* Entity Timelines (User, Host, IP)
 	* Cross-resource queries (e.g., KQL)
-```
-
-## Updating the Blueprint Document
-
-Yes, we should update the `16_MCP_Blueprint_Reference.md` file to reflect the changes and provide a reusable template for future MCP projects.
-
-## Updating the README.md Document
-
-To ensure that the changes we made to the other documents are reflected in the `README.md` document, we should update the `README.md` file to include links to the updated sections.
-
-For example:
-
-```markdown
-## 🧭 Quick Navigation
-
-| Section | Content | Best For |
-|---------|---------|----------|
-| `01` | Executive Summary | CTOs, Executives |
-| `02` | End Users & Stakeholders | Product Owners |
-| `03` | Functional Requirements | Developers |
-| `04` | Non-Functional Requirements | Architects |
-| `05` | Security & Compliance | Compliance Officers |
-| `06` | Data Models | Backend Developers |
-| `07` | API Contracts | Integration Engineers |
-| `08` | Deployment Architecture | DevOps |
-| `09` | Testing Scenarios | QA Engineers |
-| `10` | Success Metrics | Stakeholders |
-| `11` | Token Governance & Cost | FinOps Team |
-| `12` | Anti-Hallucination Framework | AI Safety Team |
-| `13` | UI Architecture | Frontend Developers |
-| `14` | Local Environment Setup | New Contributors |
-| `15` | Connection Documentation | End Users |
-| `16` | MCP Blueprint Reference | Future Projects |
-| `17` | Appendix | Reference |
-
-### How to Use This Document Later
-
-When creating the Architecture Document, reference sections:
-- `01_Executive_Summary.md`
-- `08_Deployment_Architecture.md`
-- `05_Security_and_Compliance.md`
-- `13_UI_Architecture.md`
-
-When generating code prompts, reference sections:
-- `03_Functional_Requirements.md`
-- `06_Data_Models.md`
-- `07_API_Contracts.md`
 
 ### 13.2.1 Component Tree
 
@@ -94,12 +40,12 @@ FinOps SRE Sentinel UI
 │   ├── Dashboard (Overview)
 │   ├── Incidents (Active/Past)
 │   ├── Approvals (Pending Queue)
-│   ├── Token Usage (Cost Dashboard)
+│   ├── Resource Usage (Execution Dashboard)
 │   └── Compliance (Drift Reports)
 │
 ├── Main Content Area
 │   ├── Live Reasoning Feed (SSE Stream)
-│   │   ├── AI Thought Steps
+│   │   ├── Tool Execution Progress
 │   │   ├── Tool Execution Results
 │   │   └── Confidence Scores
 │   │
@@ -111,7 +57,7 @@ FinOps SRE Sentinel UI
 │   │
 │   └── Dashboard Panels
 │       ├── MTTR Trend Chart
-│       ├── Token Burn Rate
+│       ├── Tool Execution Rate
 │       ├── Active Incidents
 │       └── Compliance Score
 │
@@ -120,54 +66,85 @@ FinOps SRE Sentinel UI
     └── Session Info
 ```
 
-### 13.2.2 Key Features
+### 13.2.2 Key Components
 
-1. **Live Reasoning Feed**: Displays AI's step-by-step thinking via SSE
+| Component | File | Description |
+|-----------|------|-------------|
+| **DashboardMetrics** | `components/DashboardMetrics.js` | Displays system health metrics, execution counts, and status overview |
+| **ToolRunner** | `components/ToolRunner.js` | Interface for selecting and executing MCP tools with input forms |
+| **RealTimeInsights** | `components/RealTimeInsights.js` | SSE-powered live feed of tool execution results and system events |
+| **ApprovalRequest** | `components/ApprovalRequest.js` | HITL approval interface for high-risk actions with approve/reject workflow |
+
+### 13.2.3 Key Features
+
+1. **Live Reasoning Feed**: Displays tool execution progress via SSE at `/api/v1/stream/insights`
 2. **Approval Dashboard**: Manages pending approvals with risk assessment
-3. **Token Governance Dashboard**: Tracks real-time token burn and cost
+3. **Resource Usage Dashboard**: Tracks tool execution counts and performance metrics
 4. **Compliance Monitoring**: Shows compliance status with drill-down
 5. **Incident Timeline**: Visualizes incident response timeline
 
 ## 13.3 Technical Implementation
+
 ### Frontend Framework
-- **React** with **TypeScript** for component-based UI
-- **Material-UI** or similar for consistent design
+- **React 18** (JavaScript, NOT TypeScript) with `createRoot` API for concurrent rendering
+- **Custom CSS** for styling (project-specific design system)
+- **SSE (EventSource)** for real-time server-sent events from `/api/v1/stream/insights`
+- **fetch API** for REST calls to MCP server endpoints
 
 ### State Management
-- **Redux** or similar for global state management
-- **Local state** for component-specific data
+- **React Hooks** (`useState`, `useEffect`) for local component state
+- **Context API** for shared state across components (auth, tool registry)
 
 ### API Integration
-- REST API calls to MCP server for data
-- SSE (Server-Sent Events) for real-time updates
+- REST API calls to MCP server at `http://localhost:8000` for data
+- SSE (Server-Sent Events) at `/api/v1/stream/insights` for real-time updates
+- MCP JSON-RPC 2.0 at `/mcp` for MCP protocol communication
 
-### 13.3.1 Frontend Framework
+### 13.3.1 Entry Point
 
-- **React** with **TypeScript** for component-based UI
-- **Material-UI** or similar for consistent design
-- **React Query** for efficient data fetching and caching
+```javascript
+// src/ui/src/index.js
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 
-### 13.3.2 State Management
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
 
-- **Redux** or similar for global state management
-- **Local state** for component-specific data
+### 13.3.2 API Communication Pattern
 
-### 13.3.3 API Integration
+```javascript
+// REST call with API Key authentication
+const response = await fetch('http://localhost:8000/api/v1/tools', {
+  headers: { 'X-API-Key': apiKey }
+});
+const tools = await response.json();
 
-- REST API calls to MCP server for data
-- SSE (Server-Sent Events) for real-time updates
+// SSE connection for real-time insights
+const eventSource = new EventSource('/api/v1/stream/insights');
+eventSource.addEventListener('tool:execution', (event) => {
+  const data = JSON.parse(event.data);
+  // Update UI with real-time tool execution progress
+});
+```
 
 ## 13.4 Security Considerations
 
-1. **Authentication**: JWT tokens with role-based access
-2. **Authorization**: Fine-grained permissions based on user roles
-3. **Data Protection**: Sensitive data masked/redacted in UI
-4. **Audit Logging**: All user interactions logged
+1. **Authentication**: API Key stored in client state, sent via `X-API-Key` header
+2. **Authorization**: Tool access controlled by server-side RBAC based on API key role
+3. **Data Protection**: Sensitive data masked/redacted server-side before reaching UI
+4. **Audit Logging**: All user interactions logged via MCP server audit trail
 
 ## 13.5 Performance Optimization
 
-1. **Code splitting**: Load components on demand
-2. **Caching**: Use React Query for data caching
+1. **Code splitting**: Load components on demand via React.lazy()
+2. **SSE over polling**: Real-time updates via server-sent events instead of client polling
 3. **Lazy loading**: Load heavy components lazily
+4. **Memoization**: React.memo() for expensive component renders
 
 *The UI architecture must be responsive, secure, and provide real-time insights. For local environment setup, proceed to Section 14.*

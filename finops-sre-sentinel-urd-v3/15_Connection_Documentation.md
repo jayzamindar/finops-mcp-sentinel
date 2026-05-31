@@ -42,13 +42,13 @@ eventSource.onmessage = (event) => {
 For tool execution and data retrieval:
 
 1. Use `POST /api/v1/tools/{tool_name}/execute` to execute tools
-2. Include `Authorization: Bearer {jwt_token}` header for authentication
+2. Include `X-API-Key: {api_key}` header for authentication
 
 Example:
 ```bash
 curl -X POST \
   http://localhost:8000/api/v1/tools/diagnose_transaction_latency/execute \
-  -H 'Authorization: Bearer your_jwt_token' \
+  -H 'X-API-Key: your_api_key' \
   -H 'Content-Type: application/json' \
   -d '{"service_name": "payment-gateway"}'
 ```
@@ -57,13 +57,13 @@ curl -X POST \
 
 To integrate with the MCP server:
 
-1. **Claude Desktop/Cursor IDE**: Use `stdio` protocol for local development
+1. **Claude Desktop/Cursor IDE**: Use `stdio` protocol for local development (via MCP JSON-RPC 2.0)
 2. **Web UI**: Use SSE for real-time updates
 3. **Custom Applications**: Use REST APIs for tool execution and data retrieval
 
 ## 15.3 Security Considerations
 
-1. **Authentication**: Use JWT tokens with role-based access control
+1. **Authentication**: Use API Key (X-API-Key header) with role-based access control (admin, sre, viewer)
 2. **Authorization**: Fine-grained permissions based on user roles
 3. **Data Protection**: Sensitive data masked/redacted in responses
 

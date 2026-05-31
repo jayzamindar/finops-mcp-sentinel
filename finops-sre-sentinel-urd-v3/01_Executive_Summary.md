@@ -59,16 +59,15 @@ Built on the **Model Context Protocol (MCP)**, it acts as an intelligent bridge 
 
 ## 1.6 Cost to Build (This Project)
 
-**Using NVIDIA free tier models: $0**
+**Built with open-source technologies: $0**
 
 | Resource | Cost | Notes |
 |----------|------|-------|
-| NVIDIA NIM API (DeepSeek V4 Flash) | Free | Limited requests/day, sufficient for development |
-| NVIDIA NIM API (Llama 4 Maverick) | Free | Free tier with rate limits |
-| Ollama (Local Models) | Free | Runs on your 16GB RAM machine |
+| Python / FastAPI (MCP Server) | Free | Open-source async web framework |
+| React 18 (UI) | Free | Open-source JavaScript UI library |
 | Docker Desktop | Free | Already installed |
-| VS Code + Continue.dev | Free | Already configured |
-| Python, Node.js, uv, npm | Free | Open source |
+| VS Code | Free | Already configured |
+| Python, Node.js, npm | Free | Open source |
 
 **Your total investment: Time, effort, and a production-grade GitHub portfolio project.**
 

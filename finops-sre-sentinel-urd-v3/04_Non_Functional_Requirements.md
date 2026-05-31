@@ -49,7 +49,7 @@
 
 | Requirement | Implementation | Verification Method |
 |-------------|---------------|-------------------|
-| Authentication | JWT tokens with RS256 signing | Unit tests for token validation |
+| Authentication | API Key with SHA-256 hashing (X-API-Key header) | Unit tests for key validation |
 | Authorization | RBAC with role-based permission checks | Integration tests for all roles |
 | PII Redaction | Regex-based masking of PAN, SSN, email, phone | Unit tests with known patterns |
 | Audit Trail | Immutable log with SHA-256 checksums | Verification tests for tamper detection |
@@ -76,7 +76,7 @@
 | Python | 3.11+ | 3.11.0 minimum |
 | Node.js | 18+ | For React UI build |
 | Docker | 24+ | Docker Desktop on Windows |
-| Ollama | Latest stable | For local model inference |
+| React | 18+ | JavaScript (not TypeScript) |
 | VS Code | Latest | With Continue.dev plugin |
 | Browser | Chrome 100+, Firefox 100+, Edge 100+ | For React UI |
 
@@ -84,11 +84,11 @@
 
 | Constraint | Value | Impact |
 |-----------|-------|--------|
-| RAM | 16 GB | Limits local model size to 7B-13B parameters |
-| CPU | AMD Ryzen AI 7 | Adequate for CPU inference of small models |
-| GPU | AMD Radeon (Integrated) | Not suitable for large model inference |
-| Storage | Assumed > 50GB free | For Docker images, models, and project files |
-| Network | Internet required | For NVIDIA NIM API calls |
+| RAM | 16 GB | Sufficient for MCP server + UI + Docker containers |
+| CPU | AMD Ryzen AI 7 | Adequate for FastAPI + tool execution |
+| GPU | Not required | All processing is CPU-based (no model inference) |
+| Storage | Assumed > 50GB free | For Docker images and project files |
+| Network | Internet required | For npm/pip package installation |
 
 ## 4.8 Observability Requirements
 
